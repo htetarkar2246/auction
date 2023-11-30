@@ -1,5 +1,5 @@
 import socket #import for socket
-
+import re #import for regular expressions
 class Client:
     def __init__(self, ip, port):
         self.ip = ip
@@ -12,9 +12,93 @@ class Client:
             client_socket.send(bytes("Hello!!", "utf-8"))
             recv = client_socket.recv(1024).decode()
             print(recv)
+            #program started
+            program:Program = Program(client_socket)
+            program.menu()
         except Exception as err:
             print(err)
-            
+
+class User:
+    def __init__(self, username:str, password:str, email:str, phone:str):
+        # User initialization with validation and loading from a file
+        self.username:str = username
+        self.password:str = password
+        self.email:str = self.validate_email(email)
+        self.phone:str = self.validate_phone(phone)
+        self.users:list = []
+   
+    def validate_email(self, email:str):
+            # Validate email format
+            email_pattern = r'^\S+@\S+\.\S+$'
+            if re.match(email_pattern, email):
+                return email
+            else:
+                return -1
+
+    def validate_phone(self, phone:str):
+            # Validate phone number format (numeric characters only)
+            phone_pattern = r'^[0-9]+$'
+            if re.match(phone_pattern, phone):
+                return phone
+            else:
+                return -1            
+class Program:
+    def __init__(self,client_socket:socket):
+        self.client_socket: socket = client_socket
+
+    def menu(self):
+        # Main menu for user interaction
+        try:
+            option:str= input("\n1: Register\n2: Auction\n3: Bid\n4: Exit\n")
+            self.client_socket.send(bytes(option,'utf-8'))
+            if option == '1':
+                self.register_user()
+            elif option == '2':
+                self.create_auction()
+            elif option == '3':
+                self.place_bid()
+            elif option == '4':
+                print("\nGoodbye!")
+                exit()
+            else:
+                print("\nInvalid option. Please try again.")
+        except Exception as err:
+                print(err)
+                self.menu()
+
+    def register_user(self):
+        # User registration process
+        username:str = input("\nEnter username: ")
+        password:str = input("Enter password: ")
+        email:str = input("Enter email: ")
+        phone:str = input("Enter phone number: ")
+
+        #validate email and phone number
+        user: User = User(username, password, email, phone)
+        if user.email == -1 and user.phone == -1:
+            print("\nInvalid Email & Phone Number Format!!")
+            self.menu()
+        elif user.email == -1:
+            print("\nInvalid Email Format!!")
+            self.menu()
+        elif user.phone == -1:
+            print("\nInvalid Phone Number Format!!")
+            self.menu()
+        else:
+            self.client_socket.send(bytes(username+'||'+password+'||'+email+'||'+phone,'utf-8'))
+            reply = self.client_socket.recv(1024).decode()
+            print(reply)
+            self.menu()
+
+    def create_auction(self):
+        # Placeholder for auction creation logic
+        pass
+
+    def place_bid(self):
+        # Placeholder for bid placement logic
+        pass
+        
+        
 if __name__ == '__main__':
     client:Client = Client('localhost',8080)
     client.connect_to_server()
