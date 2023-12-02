@@ -1,5 +1,6 @@
 import socket #import for socket
 import re #import for regular expressions
+from datetime import datetime
 class Client:
     def __init__(self, ip, port):
         self.ip = ip
@@ -41,7 +42,21 @@ class User:
             if re.match(phone_pattern, phone):
                 return phone
             else:
-                return -1            
+                return -1
+
+class Auction:
+    def __init__(self,title:str,description:str,end_time:str):
+        self.title: str = title
+        self.description: str = description
+        self.end_time: str = self.validate_date(end_time)
+
+    def validate_date(self, date: str):
+        # Validate date format
+        date_pattern = re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')
+        if date_pattern.match(date):
+            return date
+        else:
+            return None
 class Program:
     def __init__(self,client_socket:socket):
         self.client_socket: socket = client_socket
@@ -85,14 +100,32 @@ class Program:
             print("\nInvalid Phone Number Format!!")
             self.menu()
         else:
+            # registered user's data are sent to server
             self.client_socket.send(bytes(username+'||'+password+'||'+email+'||'+phone,'utf-8'))
             reply = self.client_socket.recv(1024).decode()
             print(reply)
             self.menu()
 
     def create_auction(self):
-        # Placeholder for auction creation logic
-        pass
+        title:str = input("Enter auction title: ")
+        description:str = input("Enter auction description: ")
+        end_time:str = input("Enter auction end time (YYYY-MM-DD HH:MM:SS): ")
+
+        auction: Auction = Auction(title,description,end_time)
+        current_time: str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')#generating curren_time
+        if auction.end_time is None:
+            print("\nInvalid Date-Time Format!!")
+            self.menu()
+        # Comparing Time
+        elif datetime.strptime(auction.end_time,'%Y-%m-%d %H:%M:%S') <= datetime.strptime(current_time,'%Y-%m-%d %H:%M:%S'):
+            print("\nInvalid Time!!")
+            self.menu()
+        else:
+            self.client_socket.send(bytes(title+'||'+description+'||'+end_time,'utf-8'))
+            reply = self.client_socket.recv(1024).decode()
+            print(reply)
+            self.menu()
+
 
     def place_bid(self):
         # Placeholder for bid placement logic
@@ -100,5 +133,5 @@ class Program:
         
         
 if __name__ == '__main__':
-    client:Client = Client('localhost',8080)
+    client: Client = Client('localhost',8888)
     client.connect_to_server()
