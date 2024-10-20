@@ -96,20 +96,20 @@ class Auction_client():
         print(reply)
 
     def place_bid(self, client_socket):
-        username = input("Enter your username: ")  # Add this to get the username
+        username = input("Enter your username: ")  
         item_name = input("Enter the item name to bid on: ")
         bid_amount = input("Enter your bid amount: ")
 
-        message = f"bid|{username}|{item_name}|{bid_amount}"  # Include the username in the message
+        message = f"bid|{username}|{item_name}|{bid_amount}"  
         self.request_to_server(message, client_socket)
         reply = self.response_from_server(client_socket)
         print(reply)
 
     def view_items(self, client_socket):
-        message = "view_items"  # Change this to match the updated server logic
+        message = "view_items"  
         self.request_to_server(message, client_socket)
         reply = self.response_from_server(client_socket)
-        print(reply)  # This will now include starting and current bids
+        print(reply)  
 
 
 if __name__ == "__main__":
