@@ -54,8 +54,6 @@ class Auction_server():
                     print("No request received or connection closed.")
                     break
 
-                print(f"Request received: {request}")
-
                 if request.startswith("register"):
                     self.register(sock, request)
                 elif request.startswith("login"):
@@ -125,6 +123,16 @@ class Auction_server():
         except Exception as err:
             self.response_to_client(f"Failed to retrieve items: {err}", sock)
 
+    def for_observer(self, item_name, bid_amount, username):
+        try:
+            ob_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            ob_socket.connect(("localhost", 9090))
+            message = f"Bidding update: {username} placed a bid of ${bid_amount} on {item_name}"
+            ob_socket.send(bytes(message, "utf-8"))
+            ob_socket.close()
+        except Exception as e:
+            print(f"Error notifying OB server: {e}")
+
     def place_bid(self, sock, request):
         try:
             _, username, item_name, bid_amount = request.split("|")
@@ -145,10 +153,17 @@ class Auction_server():
                 return
 
             bids_collection.insert_one({"username": username, "item_id": item["_id"], "bid_amount": bid_amount})
+
             items_collection.update_one({"_id": item["_id"]}, {"$set": {"current_bid": bid_amount}})
-            self.response_to_client(f"Bid placed successfully. Current highest bid for {item_name} is now ${bid_amount}.", sock)
+
+            bid_message = f"User {username} placed a bid of ${bid_amount} on {item_name}."
+            print(bid_message)
+            self.response_to_client(
+                f"Bid placed successfully. Current highest bid for {item_name} is now ${bid_amount}.", sock)
+
         except Exception as err:
             self.response_to_client(f"Failed to place bid: {err}", sock)
+
 
 if __name__ == "__main__":
     auction_server = Auction_server()
