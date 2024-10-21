@@ -104,7 +104,14 @@ class Auction_server():
         try:
             _, item_name, item_description, starting_bid, auction_duration = request.split("|")
             starting_bid = float(starting_bid)
-            auction_duration = int(auction_duration)  # Duration in minutes
+            auction_duration = int(auction_duration)
+
+            # Check if the item name already exists
+            existing_item = items_collection.find_one({"name": item_name})
+            if existing_item:
+                self.response_to_client("Item with this name already exists. Please choose a different name.", sock)
+                return
+
             end_time = datetime.datetime.now() + datetime.timedelta(minutes=auction_duration)
 
             items_collection.insert_one({
