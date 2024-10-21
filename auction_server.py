@@ -2,6 +2,7 @@ import socket
 import pymongo
 import hashlib
 import encrypt_decrypt
+import datetime
 
 connection = pymongo.MongoClient("localhost", 27017)
 db = connection['auction']
@@ -101,15 +102,19 @@ class Auction_server():
 
     def add_item(self, sock, request):
         try:
-            _, item_name, item_description, starting_bid = request.split("|")
+            _, item_name, item_description, starting_bid, auction_duration = request.split("|")
             starting_bid = float(starting_bid)
+            auction_duration = int(auction_duration)  # Duration in minutes
+            end_time = datetime.datetime.now() + datetime.timedelta(minutes=auction_duration)
+
             items_collection.insert_one({
                 "name": item_name,
                 "description": item_description,
                 "starting_bid": starting_bid,
                 "current_bid": starting_bid,
+                "end_time": end_time
             })
-            self.response_to_client("Item added successfully.", sock)
+            self.response_to_client("Item added successfully with auction end time.", sock)
         except Exception as err:
             self.response_to_client(f"Failed to add item: {err}", sock)
 
@@ -148,12 +153,16 @@ class Auction_server():
                 self.response_to_client("Item does not exist. Please try again.", sock)
                 return
 
+            current_time = datetime.datetime.now()
+            if current_time >= item["end_time"]:
+                self.response_to_client("Auction for this item has ended. No more bids allowed.", sock)
+                return
+
             if bid_amount <= item["current_bid"]:
                 self.response_to_client("Bid must be higher than the current highest bid.", sock)
                 return
 
             bids_collection.insert_one({"username": username, "item_id": item["_id"], "bid_amount": bid_amount})
-
             items_collection.update_one({"_id": item["_id"]}, {"$set": {"current_bid": bid_amount}})
 
             bid_message = f"User {username} placed a bid of ${bid_amount} on {item_name}."
