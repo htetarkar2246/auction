@@ -89,27 +89,28 @@ class Auction_client():
         item_name = input("Enter the item name: ")
         item_description = input("Enter the item description: ")
         starting_bid = input("Enter the starting bid amount: ")
+        auction_duration = input("Enter the auction duration in minutes: ")
 
-        message = f"add_item|{item_name}|{item_description}|{starting_bid}"
+        message = f"add_item|{item_name}|{item_description}|{starting_bid}|{auction_duration}"
         self.request_to_server(message, client_socket)
         reply = self.response_from_server(client_socket)
         print(reply)
 
     def place_bid(self, client_socket):
-        username = input("Enter your username: ")  
+        username = input("Enter your username: ")
         item_name = input("Enter the item name to bid on: ")
         bid_amount = input("Enter your bid amount: ")
 
-        message = f"bid|{username}|{item_name}|{bid_amount}"  
+        message = f"bid|{username}|{item_name}|{bid_amount}"
         self.request_to_server(message, client_socket)
         reply = self.response_from_server(client_socket)
         print(reply)
 
     def view_items(self, client_socket):
-        message = "view_items"  
+        message = "view_items"
         self.request_to_server(message, client_socket)
         reply = self.response_from_server(client_socket)
-        print(reply)  
+        print(reply)
 
 
 if __name__ == "__main__":
