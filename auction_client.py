@@ -36,6 +36,10 @@ class Auction_client():
         reply = self.response_from_server(client_socket)
         print(reply)
 
+        self.home(client_socket)
+
+
+    def home(self, client_socket):
         choice = input("1:Register\n2:Login\n3:Exit\n")
 
         if choice == '1':
@@ -57,18 +61,27 @@ class Auction_client():
         print(reply)
 
     def login(self, client_socket):
-        username = input("Enter your username: ")
-        password = input("Enter your password: ")
+        while True:
+            username = input("Enter your username: ")
+            password = input("Enter your password: ")
 
-        message = f"login|{username}|{password}"
-        self.request_to_server(message, client_socket)
-        reply = self.response_from_server(client_socket)
+            login_message = f"login|{username}|{password}"
+            self.request_to_server(login_message, client_socket)
 
-        if "Login successful" in reply:
-            print(f"Welcome, {username}. You are logged in.")
-            self.auction_menu(client_socket)
-        else:
-            print(reply)
+            reply = self.response_from_server(client_socket)
+
+            if reply == "Login successful":
+                print(reply)
+
+                self.auction_menu(client_socket)
+                break
+            else:
+                print(reply)
+                retry = input("Invalid credentials. Do you want to try again? (yes/no): ")
+                if retry.lower() != 'yes':
+                    print("Returning to the main menu.")
+                    self.home(client_socket)
+                    break
 
     def auction_menu(self, client_socket):
         while True:
